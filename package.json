@@ -1,0 +1,11 @@
+{
+  "name": "makhuzwayo-investors",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node --env-file-if-exists=.env src/build.mjs",
+    "preview": "node src/preview.mjs",
+    "check": "node src/check.mjs"
+  },
+  "engines": { "node": ">=22" }
+}
