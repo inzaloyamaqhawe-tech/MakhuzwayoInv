@@ -19,7 +19,7 @@ document.addEventListener('keydown', (event) => {
 nav.addEventListener('click', (event) => {
   if (event.target.closest('a')) closeMenu();
 });
-matchMedia('(max-width: 1120px)').addEventListener('change', closeMenu);
+matchMedia('(max-width: 1240px)').addEventListener('change', closeMenu);
 
 for (const form of document.querySelectorAll('[data-preview-form]')) {
   form.addEventListener('submit', (event) => event.preventDefault());

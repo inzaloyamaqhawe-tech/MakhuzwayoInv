@@ -27,6 +27,7 @@ try {
     assert.match(body, /<title>[^<]{1,45}<\/title>/, page.url);
     assert.match(body, /rel="icon"[^>]*href="\/assets\/favicon\.png"/, page.url);
     assert.match(body, /class="brand header-brand"[^>]*><img src="\/assets\/milogo\.png"/, page.url);
+    assert.match(body, /<strong class="header-company">Makhuzwayo Investors<\/strong><span class="header-slogan">Empowering Ideas\. Building Legacies\.<\/span>/, page.url);
     assert.match(body, /class="brand footer-brand"[^>]*><img src="\/assets\/mimark\.png"/, page.url);
     const ids = [...body.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
     assert.equal(ids.length, new Set(ids).size, 'duplicate IDs: ' + page.url);

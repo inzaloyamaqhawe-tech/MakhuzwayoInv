@@ -86,7 +86,7 @@ ${metadata}
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <header class="site-header"><div class="wrap header-inner">
-<a class="brand header-brand" href="/"><img src="/assets/milogo.png" width="1254" height="1254" alt="Makhuzwayo Investors"></a>
+<a class="brand header-brand" href="/"><img src="/assets/milogo.png" width="1254" height="1254" alt=""><span class="header-identity"><strong class="header-company">${escape(site.name)}</strong><span class="header-slogan">Empowering Ideas. Building Legacies.</span></span></a>
 <button type="button" class="menu-toggle" aria-expanded="false" aria-controls="site-nav" hidden>Menu <span aria-hidden="true">☰</span></button>
 <nav id="site-nav" aria-label="Primary" class="site-nav">
 <ul>${nav.map(([url, label]) => `<li><a href="${url}" ${isActive(url) ? 'aria-current="' + (url === page.url ? 'page' : 'location') + '"' : ''}>${label}</a></li>`).join('')}</ul>
