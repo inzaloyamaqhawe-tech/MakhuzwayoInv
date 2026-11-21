@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import { pages } from './pages.mjs';
+import { buildTarget } from './config.mjs';
 import { previewServer } from './preview.mjs';
 
 const server = previewServer().listen(0, '127.0.0.1');
 await new Promise((done) => server.once('listening', done));
-const origin = 'http://127.0.0.1:' + server.address().port;
+const { directory, basePath } = buildTarget;
+const origin = 'http://127.0.0.1:' + server.address().port + basePath;
 const resources = new Map();
 function get(path) {
   if (!resources.has(path)) resources.set(path, fetch(origin + path).then(async (response) => ({ status: response.status, body: await response.text(), type: response.headers.get('content-type') })));
@@ -16,7 +18,13 @@ try {
   const descriptions = new Set();
   const links = new Set();
   for (const page of pages) {
-    const { status, body } = await get(page.url);
+    const { status, body: rendered } = await get(page.url);
+    for (const [, route] of rendered.matchAll(/\b(?:href|src|srcset)="(\/(?!\/)[^"]*)"/g)) {
+      assert.ok(route.startsWith(basePath + '/'), route);
+      links.add(route.slice(basePath.length).replace(/&amp;/g, '&'));
+    }
+    const body = basePath ? rendered.replaceAll('="' + basePath + '/', '="/') : rendered;
+    if (basePath) assert.match(body, /name="robots" content="noindex, follow"/);
     assert.equal(status, 200, page.url);
     assert.equal([...body.matchAll(/<h1[ >]/g)].length, 1, page.url);
     titles.add(body.match(/<title>(.*?)<\/title>/)?.[1]);
@@ -31,7 +39,6 @@ try {
     assert.match(body, /class="brand footer-brand"[^>]*><img src="\/assets\/mimark\.png"/, page.url);
     const ids = [...body.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
     assert.equal(ids.length, new Set(ids).size, 'duplicate IDs: ' + page.url);
-    for (const [, path] of body.matchAll(/\b(?:href|src|srcset)="(\/[^"]*)"/g)) links.add(path.replace(/&amp;/g, '&'));
     if (body.includes('data-preview-form')) {
       assert.match(body, /form-action 'none'/);
       assert.match(body, /type="submit" [^>]*disabled/);
@@ -52,7 +59,7 @@ try {
     assert.equal((await get('/assets/' + file)).type, 'image/png', file);
   }
   assert.deepEqual(
-    await readFile(new URL('../dist/assets/milogo.png', import.meta.url)),
+    await readFile(new URL('../' + directory + '/assets/milogo.png', import.meta.url)),
     await readFile(new URL('../public/assets/milogo.png', import.meta.url)),
   );
   const missing = await get('/this-page-does-not-exist/');
@@ -61,10 +68,17 @@ try {
   assert.equal((await get('/api/sign-in.php')).status, 404);
   assert.equal((await get('/.env')).status, 404);
   assert.equal((await fetch(origin + '/sign-in/', { method: 'POST' })).status, 405);
-  assert.equal((await fetch(origin + '/index.html', { redirect: 'manual' })).headers.get('location'), '/');
-  assert.equal((await fetch(origin + '/innovation-categories', { redirect: 'manual' })).headers.get('location'), '/innovation-categories/');
-  assert.match(await readFile(new URL('../dist/.htaccess', import.meta.url), 'utf8'), /ErrorDocument 404 \/404\.html/);
-  assert.ok(!(await readdir(new URL('../dist/', import.meta.url))).some((name) => /^\.(?:env|git)/.test(name) || ['docs', 'src'].includes(name)));
+  assert.equal((await fetch(origin + '/index.html', { redirect: 'manual' })).headers.get('location'), basePath + '/');
+  assert.equal((await fetch(origin + '/innovation-categories', { redirect: 'manual' })).headers.get('location'), basePath + '/innovation-categories/');
+  const output = new URL('../' + directory + '/', import.meta.url);
+  const entries = await readdir(output);
+  if (basePath) {
+    assert.ok(!entries.includes('.htaccess'));
+    assert.equal((await fetch(origin + '/README.md')).status, 404);
+  } else {
+    assert.match(await readFile(new URL('.htaccess', output), 'utf8'), /ErrorDocument 404 \/404\.html/);
+  }
+  assert.ok(!entries.some((name) => /^\.(?:env|git)/.test(name) || ['docs', 'src'].includes(name)));
   console.log(`Verified ${pages.length} pages and ${links.size} unique internal links and assets, route redirects, 404 status, brand assets, footer credit and inactive forms.`);
 } finally {
   server.close();

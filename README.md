@@ -16,6 +16,10 @@ Open the printed local URL. Stop the server with Ctrl+C. The check script audits
 
 Copy `.env.example` to `.env` for approved public deployment settings. The normal build deliberately has indexing disabled and omits public contact details, canonical URLs and sitemap entries when there is no approved origin. The hero is a provisional, AI-generated illustration of a cultural gathering in KwaZulu-Natal. The header uses the supplied logo. The footer and favicon use crops derived from its emblem.
 
+## GitHub Pages preview
+
+The GitHub Actions workflow validates both builds and publishes only the generated `dist-pages/` preview. It uses the `/MakhuzwayoInv/` project path and disables indexing. The normal build still generates `dist/` for the Xneelo web root.
+
 ## Files
 
 - `src/` contains the generator, page and form templates, data, and the central configuration.

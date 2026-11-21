@@ -1,4 +1,5 @@
 .env
 dist/
+dist-pages/
 .dist-*
 node_modules/

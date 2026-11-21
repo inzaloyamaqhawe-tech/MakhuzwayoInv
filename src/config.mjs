@@ -1,4 +1,8 @@
 const env = process.env;
+const pagesPreview = process.argv.includes('--github-pages');
+export const buildTarget = pagesPreview
+  ? { directory: 'dist-pages', basePath: '/MakhuzwayoInv' }
+  : { directory: 'dist', basePath: '' };
 const origin = env.SITE_ORIGIN ? new URL(env.SITE_ORIGIN) : null;
 if (origin && (origin.protocol !== 'https:' || origin.href !== origin.origin + '/')) {
   throw new Error('SITE_ORIGIN must be an HTTPS origin without a path, query or fragment.');

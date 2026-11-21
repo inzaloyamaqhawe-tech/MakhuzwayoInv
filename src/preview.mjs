@@ -3,7 +3,10 @@ import { readFile } from 'node:fs/promises';
 import { extname, resolve, relative, isAbsolute } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const root = fileURLToPath(new URL('../dist/', import.meta.url));
+import { buildTarget } from './config.mjs';
+
+const { directory, basePath } = buildTarget;
+const root = fileURLToPath(new URL('../' + directory + '/', import.meta.url));
 const mime = { '.html': 'text/html; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.webp': 'image/webp', '.png': 'image/png', '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml; charset=utf-8' };
 
 export function previewServer() {
@@ -19,7 +22,13 @@ export function previewServer() {
     }
     try {
       const url = new URL(request.url, 'http://localhost');
-      const path = decodeURIComponent(url.pathname);
+      if (basePath && url.pathname === basePath) {
+        response.writeHead(301, { Location: basePath + '/' + url.search });
+        response.end();
+        return;
+      }
+      if (!url.pathname.startsWith(basePath + '/')) return await missing();
+      const path = decodeURIComponent(url.pathname.slice(basePath.length));
       if (path.includes('\\') || path.split('/').some((segment) => segment.startsWith('.'))) return await missing();
       const target = resolve(root, '.' + path + (path.endsWith('/') ? 'index.html' : ''));
       const inside = relative(root, target);
@@ -47,5 +56,5 @@ export function previewServer() {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const port = Number(process.env.PORT || 4173);
-  previewServer().listen(port, '127.0.0.1', () => console.log(`Local preview http://127.0.0.1:${port}/`));
+  previewServer().listen(port, '127.0.0.1', () => console.log(`Local preview http://127.0.0.1:${port}${basePath}/`));
 }

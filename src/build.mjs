@@ -1,18 +1,19 @@
 import { cp, mkdir, mkdtemp, rename, rm, writeFile, access } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { site } from './config.mjs';
+import { buildTarget, site } from './config.mjs';
 import { pages } from './pages.mjs';
 import { escape, shell } from './ui.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const dist = join(root, 'dist');
+const { directory, basePath } = buildTarget;
+const dist = join(root, directory);
 const publicSource = join(root, 'public');
 const titleOf = (page) => page.title + ' | ' + site.name;
 
 function head(page) {
-  const indexable = site.indexing && !page.noindex;
-  const url = site.origin && page.url !== '/404.html' ? site.origin + page.url : '';
+  const indexable = !basePath && site.indexing && !page.noindex;
+  const url = !basePath && site.origin && page.url !== '/404.html' ? site.origin + page.url : '';
   const graph = [
     { '@type': 'Organization', '@id': site.origin ? site.origin + '/#organisation' : '#organisation', name: site.name, ...(site.origin && { url: site.origin + '/' }), ...(site.contactEmail && { email: site.contactEmail }), ...(site.contactPhone && { telephone: site.contactPhone }) },
     { '@type': 'WebSite', name: site.name, inLanguage: 'en-ZA', ...(site.origin && { url: site.origin + '/' }) },
@@ -28,7 +29,7 @@ function head(page) {
     });
   }
   const schema = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replace(/</g, '\\u003c');
-  const image = site.origin && site.origin + '/assets/heritage.webp';
+  const image = !basePath && site.origin && site.origin + '/assets/heritage.webp';
   const tabTitle = page.url === '/' ? site.name : page.title;
   return `<title>${escape(tabTitle)}</title>
 <link rel="icon" type="image/png" sizes="64x64" href="/assets/favicon.png">
@@ -87,11 +88,16 @@ try {
   await Promise.all(pages.map(async (page) => {
     const output = join(staging, page.url.slice(1) + (page.url.endsWith('/') ? 'index.html' : ''));
     await mkdir(dirname(output), { recursive: true });
-    await writeFile(output, shell(page, head(page)));
+    const html = shell(page, head(page));
+    // Pages serves this project beneath its repository name. Keep Xneelo URLs rooted at /.
+    const outputHtml = basePath
+      ? html.replace(/ (href|src|srcset)="\/(?!\/)/g, (attribute) => attribute.slice(0, -1) + basePath + '/')
+      : html;
+    await writeFile(output, outputHtml);
   }));
-  await writeFile(join(staging, '.htaccess'), apache);
-  await writeFile(join(staging, 'robots.txt'), robots);
-  if (site.origin) {
+  if (!basePath) await writeFile(join(staging, '.htaccess'), apache);
+  if (!basePath) await writeFile(join(staging, 'robots.txt'), robots);
+  if (!basePath && site.origin) {
     const entries = pages.filter((page) => !page.noindex).map((page) => '  <url><loc>' + escape(site.origin + page.url) + '</loc></url>').join('\n');
     await writeFile(join(staging, 'sitemap.xml'), '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + entries + '\n</urlset>\n');
   }
@@ -100,4 +106,4 @@ try {
 } finally {
   await rm(staging, { recursive: true, force: true });
 }
-console.log(`Built ${pages.length} pages in dist. Indexing ${site.indexing ? 'enabled' : 'off'}.`);
+console.log(`Built ${pages.length} pages in ${directory}. Indexing ${!basePath && site.indexing ? 'enabled' : 'off'}.`);
