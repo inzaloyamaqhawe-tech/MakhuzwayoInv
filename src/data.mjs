@@ -1,6 +1,6 @@
 export const nav = [
   ['/', 'Home'], ['/about/', 'About Us'], ['/how-it-works/', 'How It Works'],
-  ['/innovation-categories/', 'Innovation Categories'], ['/for-investors/', 'For Investors'], ['/contact/', 'Contact'],
+  ['/innovation-categories/', 'Innovation Categories'], ['/for-innovators/', 'For Innovators'], ['/for-investors/', 'For Investors'], ['/contact/', 'Contact'],
 ];
 
 export const steps = [
@@ -26,6 +26,7 @@ export const mission = 'To support promising innovators by connecting ideas with
 export const vision = 'To help build a future where innovation is recognised, opportunities are more accessible and meaningful ideas can contribute to lasting economic and social progress.';
 
 export const faqs = [
+  ['Can I submit an idea or enquiry now?', 'Idea submissions, investor enquiries and general enquiries are closed. You can read the guides and explore the website’s sample forms.'],
   ['What is Makhuzwayo Investors?', 'A South African innovation-development initiative that aims to help creators explore practical development, collaboration and potential investment pathways.'],
   ['Who can submit an idea?', 'Individuals and organisations can use the preparation guide. Eligibility and participation rules will be published before submissions open.'],
   ['Does submitting an idea guarantee funding?', 'No. Progress depends on review, available resources and mutually agreed terms.'],
@@ -54,7 +55,20 @@ const sectors = [
   ['other','Other Innovative Ideas','spark','Explore cross-sector or emerging ideas that need a broader starting point.','Repair-and-training services|Digital tools for informal traders|Low-cost safety improvement concepts','Be clear about the main problem and which part of the proposed solution should be tested first.','Early guidance could help find a suitable sector, clarify the concept and choose a practical first test.','What if my idea fits more than one sector?','Choose the best fit or select this category and briefly explain where the sectors overlap.'],
 ];
 
+const firstTests = {
+  'renewable-energy': 'A produce cooperative could test solar cold storage for a small daily harvest. Estimate how much produce needs cooling and for how many hours, then use a pilot to track temperature and energy use.',
+  'technology-software': 'A community shop could use a shared device to record stock movements offline. Test whether two staff members can complete one stocktake with fictional product data, then sync when the device reconnects.',
+  'engineering-manufacturing': 'A small workshop could test a new fixture for holding parts consistently. State the material and expected loads, then have a qualified team measure alignment and setup time under normal operating conditions.',
+  'agriculture-food-systems': 'A small vegetable farm could use irrigation monitoring to decide when to water. Compare soil readings and irrigation decisions across two similar plots over a short growing period.',
+  'environment-recycling': 'A collection group could sort plastic from one collection point for a local recycler. Track how much arrives clean enough to reuse and which materials cause sorting or contamination problems.',
+  'healthcare-medtech': 'A clinic reception team could trial an appointment queue with fictional bookings. Measure scheduling time and missed handovers using test records. A workflow pilot can use synthetic data and stay separate from clinical decisions.',
+  'education-skills': 'An adult training group could test an offline safety lesson on shared devices. Choose the language learners use, then compare how accurately they complete a short practical task before and after the lesson.',
+  'transport-mobility': 'For passenger transport, ask people with different mobility needs to test whether they can plan an accessible route. For goods, a delivery team could compare completion time on one trial route.',
+  'community-social': 'Residents could trial a neighbourhood tool library with a local volunteer group. Ask residents which tools matter first, track completed loans and returns, and agree how the group will judge whether the trial helped.',
+  other: 'A repair-and-training idea might span Engineering & Manufacturing and Education & Skills Development. Compare those categories first, then use this route if the main problem still crosses sectors. A small repair session could test both demand and what participants learn.',
+};
+
 export const categories = sectors.map(([id, name, icon, description, examples, challenge, pathway, question, answer]) => ({
-  id, name, icon, description, examples: examples.split('|'), challenge, pathway, question, answer,
+  id, name, icon, description, examples: examples.split('|'), challenge, pathway, question, answer, firstTest: firstTests[id],
   url: '/innovation-categories/' + id + '/',
 }));

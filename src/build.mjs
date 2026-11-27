@@ -81,7 +81,7 @@ AddType image/webp .webp
 AddType image/png .png
 `;
 
-await Promise.all(['heritage.webp', 'heritage-mobile.webp', 'styles.css', 'main.mjs', 'milogo.png', 'mimark.png', 'favicon.png'].map((file) => access(join(publicSource, 'assets', file))));
+await Promise.all(['heritage.webp', 'heritage-mobile.webp', 'styles.css', 'main.mjs', 'milogo.png', 'mimark.png', 'milogo-header.webp', 'mimark-footer.webp', 'favicon.png'].map((file) => access(join(publicSource, 'assets', file))));
 const staging = await mkdtemp(join(root, '.dist-'));
 try {
   await cp(publicSource, staging, { recursive: true });

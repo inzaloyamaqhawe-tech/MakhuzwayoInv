@@ -1,10 +1,10 @@
 import { categories } from './data.mjs';
 import { escape, link } from './ui.mjs';
 
-const field = (name, label, { type = 'text', required = true, autocomplete = '', maxlength = 160, extra = '' } = {}) => {
+const field = (name, label, { type = 'text', required = true, autocomplete = '', maxlength = 160, extra = '', hint = '' } = {}) => {
   const id = 'field-' + name;
-  const attrs = `id="${id}" name="${name}" ${required ? 'required' : ''} maxlength="${maxlength}" ${autocomplete ? 'autocomplete="' + autocomplete + '"' : ''} ${extra}`;
-  return `<div class="field"><label for="${id}">${label}${required ? '' : ' <span>(optional)</span>'}</label>${type === 'textarea' ? `<textarea ${attrs} rows="4"></textarea>` : `<input type="${type}" ${attrs}>`}</div>`;
+  const attrs = `id="${id}" name="${name}" ${required ? 'required' : ''} maxlength="${maxlength}" ${autocomplete ? 'autocomplete="' + autocomplete + '"' : ''} ${extra} ${hint ? 'aria-describedby="' + id + '-hint"' : ''}`;
+  return `<div class="field"><label for="${id}">${label}${required ? '' : ' <span>(optional)</span>'}</label>${hint ? '<p class="field-hint" id="' + id + '-hint">' + escape(hint) + '</p>' : ''}${type === 'textarea' ? `<textarea ${attrs} rows="4"></textarea>` : `<input type="${type}" ${attrs}>`}</div>`;
 };
 const select = (name, label, options, { required = true, extra = '' } = {}) => `<div class="field"><label for="field-${name}">${label}</label><select id="field-${name}" name="${name}" ${required ? 'required' : ''} ${extra}><option value="">Select an option</option>${options.map((option) => {
   const [value, text] = Array.isArray(option) ? option : [option, option];
@@ -22,7 +22,7 @@ const email = () => field('email', 'Email address', { type: 'email', autocomplet
 const phone = (required = true) => field('phone', 'Phone number', { type: 'tel', autocomplete: 'tel', required, maxlength: 32 });
 const org = () => `<div data-organisational>${field('organisation', 'Organisation name', { required: false, autocomplete: 'organization' })}</div>`;
 const privacy = () => ack('privacyAcknowledged', 'I have read the draft ' + link('/privacy/', 'Privacy Policy') + '.');
-const password = (registration = false) => `<div class="password-wrap">${field('password', 'Password', { type: 'password', autocomplete: registration ? 'new-password' : 'current-password', maxlength: 128, extra: registration ? 'minlength="12"' : '' })}<button type="button" class="button secondary password-toggle" data-password aria-controls="field-password" aria-pressed="false">Show password</button></div>`;
+const password = (registration = false) => `<div class="password-wrap">${field('password', 'Password', { type: 'password', autocomplete: registration ? 'new-password' : 'current-password', maxlength: 128, extra: registration ? 'minlength="12"' : '', hint: registration ? 'Use a fictional password of at least 12 characters.' : 'Use a fictional password for this preview.' })}<button type="button" class="button secondary password-toggle" data-password aria-controls="field-password" aria-pressed="false">Show password</button></div>`;
 const categoryOptions = categories.map(({ id, name: label }) => [id, label]);
 const stages = [
   ['concept', 'Concept only'], ['research', 'Research underway'], ['early-prototype', 'Early prototype'],
@@ -54,7 +54,7 @@ const disabledText = {
   requestPasswordReset: 'Password reset is unavailable.',
 };
 function frame(service, fields, actions = '', notice = 'This preview accepts sample details for validation. Details stay on this page and are not sent.') {
-  return `<section class="section form-section"><div class="wrap"><div class="form-shell">
+  return `<section class="section form-section" ${service === 'submitContactEnquiry' ? 'id="general-enquiry"' : ''}><div class="wrap"><div class="form-shell">
   <aside class="notice" aria-label="Service availability"><strong>${disabledText[service]}</strong><p>${notice}</p></aside>
   <noscript><p>Enable JavaScript to use the form preview. All public information pages remain available.</p></noscript>
   <form data-preview-form data-service="${service}" autocomplete="off" hidden>
@@ -69,29 +69,29 @@ export function ideaForm() {
   const sections = [
     ['Innovator details', cols(name(), email(), phone(), field('location', 'Province or location')) + select('applicantType', 'Applying as', [['individual', 'Individual'], ['organisation', 'Organisation']], { extra: 'data-org-select data-org-required' }) + org()],
     ['Idea details', `<p>Use a non-confidential summary. Keep trade secrets, source code and patentable mechanisms private.</p>` + cols(field('projectTitle', 'Project title'), select('categoryId', 'Innovation category', categoryOptions, { extra: 'data-category-select' })) +
-      field('summary', 'Short project summary', { type: 'textarea', maxlength: 800 }) +
-      field('problem', 'Problem the idea aims to solve', { type: 'textarea', maxlength: 1500 }) +
-      field('solution', 'Proposed solution', { type: 'textarea', maxlength: 1500 }) +
+      field('summary', 'Short project summary', { type: 'textarea', maxlength: 800, hint: 'Example — An offline stock tracker for a small community shop.' }) +
+      field('problem', 'Problem the idea aims to solve', { type: 'textarea', maxlength: 1500, hint: 'Example — Staff miss stock shortages when handovers rely on paper records.' }) +
+      field('solution', 'Proposed solution', { type: 'textarea', maxlength: 1500, hint: 'Example — Record sales on a shared device offline and sync when connected.' }) +
       cols(field('beneficiaries', 'Intended beneficiaries or customers', { maxlength: 500 }), select('stage', 'Current development stage', stages))],
     ['Assistance required', choices('assistance', 'Support you would like (optional)', assistance) + field('fundingZar', 'Indicative funding requirement in rand', { type: 'number', required: false, extra: 'min="0" max="1000000000000" step="0.01"' })],
-    ['Review and submit', '<p>A live enquiry would support initial screening for relevance, feasibility and next steps.</p><dl class="review-list" data-review></dl>' + privacy() +
+    ['Review sample details', '<p>A live enquiry would support initial screening for relevance, feasibility and next steps.</p><dl class="review-list" data-review></dl>' + privacy() +
       ack('termsAcknowledged', 'I have read the draft ' + link('/idea-submission-terms/', 'Idea Submission Terms') + '.') +
       ack('noFundingGuarantee', 'I understand that submitting an idea does not guarantee funding.')],
   ];
   const progress = `<ol class="form-progress">${sections.map(([label], index) => `<li data-progress ${index === 0 ? 'aria-current="step"' : ''}><span>${index + 1}</span>${label}</li>`).join('')}</ol>`;
-  const panels = sections.map(([title, content], index) => `<section data-step ${index ? 'hidden' : ''} aria-labelledby="step-${index}"><h2 id="step-${index}" tabindex="-1">${title}</h2>${content}</section>`).join('');
+  const panels = sections.map(([title, content], index) => `<section data-step ${index ? 'hidden' : ''} aria-labelledby="step-${index}"><p class="form-step-count">Step ${index + 1} of ${sections.length}</p><h2 id="step-${index}" tabindex="-1">${title}</h2>${content}</section>`).join('');
   const controls = `<div class="form-actions"><button class="button secondary" type="button" data-back hidden>Back</button><button class="button primary" type="button" data-next>Continue</button><button class="button primary" type="button" data-validate hidden>Check sample details</button><button class="button secondary" type="submit" data-submit-preview disabled hidden>Submission unavailable</button></div>`;
-  return frame('submitInnovatorEnquiry', progress + panels, controls);
+  return frame('submitInnovatorEnquiry', '<p class="form-helper" data-category-note hidden></p>' + progress + panels, controls);
 }
 
 export function investorForm() {
-  return frame('submitInvestorEnquiry', cols(name(), email(), phone(), field('location', 'Country or province')) +
-    select('investorType', 'Investor type', investorTypes, { extra: 'data-org-select' }) + org() +
-    choices('industryIds', 'Industries of interest (optional)', categoryOptions) +
-    select('involvement', 'Preferred involvement', involvement) +
-    field('investmentRange', 'Indicative investment range', { required: false }) +
+  return frame('submitInvestorEnquiry', '<section class="form-group"><h2>About you</h2>' + cols(name(), email(), phone(), field('location', 'Country or province')) +
+    select('investorType', 'Investor type', investorTypes, { extra: 'data-org-select' }) + org() + '</section><section class="form-group"><h2>Areas of interest</h2>' +
+    choices('industryIds', 'Industries of interest (optional)', categoryOptions) + '</section><section class="form-group"><h2>How you’d like to help</h2>' +
+    select('involvement', 'Preferred involvement', involvement, { extra: 'data-involvement' }) +
+    '<div data-investment-range hidden>' + field('investmentRange', 'Indicative investment range', { required: false }) + '</div>' +
     field('experience', 'Relevant experience', { type: 'textarea', required: false, maxlength: 1200 }) +
-    field('message', 'Additional message', { type: 'textarea', required: false, maxlength: 1500 }) + privacy());
+    field('message', 'Additional message', { type: 'textarea', required: false, maxlength: 1500 }) + '</section>' + privacy());
 }
 
 export function contactForm() {
@@ -112,8 +112,8 @@ export function registrationForm(role) {
   const service = role === 'innovator' ? 'registerInnovator' : 'registerInvestor';
   return frame(service, cols(name(), email()) + password(true) +
     field('confirmPassword', 'Confirm password', { type: 'password', autocomplete: 'new-password', maxlength: 128 }) +
-    '<p class="muted">Use at least 12 characters for a sample password.</p>' + privacy(),
+    privacy() + '<div class="auth-links">' + (role === 'innovator' ? link('/for-innovators/', 'Read the Innovator Guide') : link('/investor-enquiry/', 'Preview Investor Enquiry')) + '</div>',
     undefined, 'Use sample details only. This preview cannot create accounts.');
 }
 
-export const resetForm = () => frame('requestPasswordReset', email(), undefined, 'Use a sample email address. Reset emails are currently unavailable.');
+export const resetForm = () => frame('requestPasswordReset', email() + '<div class="auth-links">' + link('/sign-in/', 'Back to Sign-in Preview') + '</div>', undefined, 'Use a sample email address. Reset emails are currently unavailable.');

@@ -19,7 +19,7 @@ document.addEventListener('keydown', (event) => {
 nav.addEventListener('click', (event) => {
   if (event.target.closest('a')) closeMenu();
 });
-matchMedia('(max-width: 1240px)').addEventListener('change', closeMenu);
+matchMedia('(max-width: 1380px)').addEventListener('change', closeMenu);
 
 for (const form of document.querySelectorAll('[data-preview-form]')) {
   form.addEventListener('submit', (event) => event.preventDefault());
@@ -48,6 +48,26 @@ for (const form of document.querySelectorAll('[data-preview-form]')) {
   if (category) {
     const preselected = new URLSearchParams(location.search).get('category');
     if ([...category.options].some(({ value }) => value && value === preselected)) category.value = preselected;
+    const note = form.querySelector('[data-category-note]');
+    const syncCategory = () => {
+      note.hidden = !category.value;
+      note.textContent = category.value ? 'Selected category · ' + category.selectedOptions[0].text : '';
+    };
+    category.addEventListener('change', syncCategory);
+    syncCategory();
+  }
+
+  const preferredInvolvement = form.querySelector('[data-involvement]');
+  if (preferredInvolvement) {
+    const range = form.querySelector('[data-investment-range]');
+    const syncRange = () => {
+      range.hidden = preferredInvolvement.value !== 'project-investment';
+      const input = form.elements.investmentRange;
+      input.disabled = range.hidden;
+      if (range.hidden) input.value = '';
+    };
+    preferredInvolvement.addEventListener('change', syncRange);
+    syncRange();
   }
 
   form.querySelector('[data-password]')?.addEventListener('click', (event) => {
@@ -85,7 +105,9 @@ for (const form of document.querySelectorAll('[data-preview-form]')) {
       const invalid = !control.validity.valid;
       if (invalid) {
         const label = control.labels?.[0]?.textContent.trim() || 'This field';
-        error.textContent = label.replace(/\s+/g, ' ') + '. ' + control.validationMessage;
+        error.textContent = control.name === 'intendedRole' && control.validity.valueMissing
+          ? 'Choose Innovator or Investor.'
+          : label.replace(/\s+/g, ' ') + '. ' + control.validationMessage;
         error.hidden = false;
         control.setAttribute('aria-invalid', 'true');
         control.setAttribute('aria-errormessage', error.id);
@@ -154,6 +176,8 @@ for (const form of document.querySelectorAll('[data-preview-form]')) {
   // Discard sensitive sample values when leaving, including back/forward cache.
   window.addEventListener('pagehide', () => {
     form.reset();
+    if (category) category.dispatchEvent(new Event('change'));
+    if (preferredInvolvement) preferredInvolvement.dispatchEvent(new Event('change'));
     clearFeedback();
     if (organisationType) syncOrganisation();
     if (roleInfo) syncRole();

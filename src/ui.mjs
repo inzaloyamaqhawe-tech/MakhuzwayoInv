@@ -5,7 +5,10 @@ export const escape = (value) => String(value).replace(/[&<>"']/g, (character) =
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
 }[character]));
 export const link = (url, label, style = 'text-link') => '<a class="' + style + '" href="' + escape(url) + '">' + escape(label) + '</a>';
-export const idea = (url = '/submit-your-idea/') => link(url, 'Submit Your Idea', 'button primary');
+const ideaPreviewLabel = 'Preview the Idea Form';
+export const investorPreviewLabel = 'Preview Investor Enquiry';
+const ideaPreviewUrl = '/submit-your-idea/';
+export const idea = (url = ideaPreviewUrl, style = 'button primary') => link(url, ideaPreviewLabel, style);
 export const list = (items) => '<ul>' + items.map((item) => '<li>' + escape(item) + '</li>').join('') + '</ul>';
 export const wrap = (title, body, id = '', style = '') => `<section class="section ${style}" ${id ? 'id="' + id + '"' : ''}><div class="wrap"><h2>${title}</h2>${body}</div></section>`;
 export const article = (title, body) => `<article class="article"><h2>${title}</h2>${body}</article>`;
@@ -26,9 +29,8 @@ const icon = (name) => `<svg class="icon" width="30" height="30" viewBox="0 0 24
 
 export function categoryGrid(items = categories) {
   return `<div class="category-grid">${items.map((category) => `<article class="category-card">
-    ${icon(category.icon)}<h3>${escape(category.name)}</h3><p>${escape(category.description)}</p>
+    ${icon(category.icon)}<h3>${link(category.url, category.name, 'category-title')}</h3><p>${escape(category.description)}</p>
     <p class="example"><strong>Example</strong> ${escape(category.examples[0])}</p>
-    <a class="text-link" href="${category.url}">Explore Category<span class="sr-only">, ${escape(category.name)}</span><span aria-hidden="true"> ↗</span></a>
   </article>`).join('')}</div>`;
 }
 
@@ -59,8 +61,8 @@ export function contactLinks() {
 
 export const crumb = (parts) => `<nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="/">Home</a></li>${parts.map(([url, title]) => `<li>${url ? link(url, title, 'crumb-link') : '<span aria-current="page">' + escape(title) + '</span>'}</li>`).join('')}</ol></nav>`;
 
-export function pageIntro(title, description, parts = [[null, title]], eyebrow = '') {
-  return `<header class="page-intro"><div class="wrap">${crumb(parts)}${eyebrow ? '<p class="eyebrow">' + escape(eyebrow) + '</p>' : ''}<h1>${escape(title)}</h1><p class="lead">${escape(description)}</p></div></header>`;
+export function pageIntro(title, description, parts = [[null, title]], eyebrow = '', introStyle = '') {
+  return `<header class="page-intro ${introStyle}"><div class="wrap">${crumb(parts)}${eyebrow ? '<p class="eyebrow">' + escape(eyebrow) + '</p>' : ''}<h1>${escape(title)}</h1><p class="lead">${escape(description)}</p></div></header>`;
 }
 
 export function cta(title, description, buttons) {
@@ -86,19 +88,20 @@ ${metadata}
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <header class="site-header"><div class="wrap header-inner">
-<a class="brand header-brand" href="/"><img src="/assets/milogo.png" width="1254" height="1254" alt=""><span class="header-identity"><strong class="header-company">${escape(site.name)}</strong><span class="header-slogan">Empowering Ideas. Building Legacies.</span></span></a>
+<a class="brand header-brand" href="/"><img src="/assets/milogo-header.webp" width="192" height="192" alt=""><span class="header-identity"><strong class="header-company">${escape(site.name)}</strong><span class="header-slogan">Empowering Ideas. Building Legacies.</span></span></a>
+<a class="button secondary header-preview-action" href="/innovation-categories/">Explore Categories</a>
 <button type="button" class="menu-toggle" aria-expanded="false" aria-controls="site-nav" hidden>Menu <span aria-hidden="true">☰</span></button>
 <nav id="site-nav" aria-label="Primary" class="site-nav">
 <ul>${nav.map(([url, label]) => `<li><a href="${url}" ${isActive(url) ? 'aria-current="' + (url === page.url ? 'page' : 'location') + '"' : ''}>${label}</a></li>`).join('')}</ul>
-<div class="header-actions"><a class="button secondary" href="/sign-in/" ${isActive('/sign-in/') ? 'aria-current="page"' : ''}>Sign In</a><a class="button primary" href="/submit-your-idea/" ${isActive('/submit-your-idea/') ? 'aria-current="page"' : ''}>Submit Your Idea</a></div>
+<div class="header-actions"><a class="button secondary" href="/sign-in/" ${isActive('/sign-in/') ? 'aria-current="page"' : ''}>Sign-in Preview</a><a class="button primary" href="${ideaPreviewUrl}" ${isActive(ideaPreviewUrl) ? 'aria-current="page"' : ''}>Idea Form Preview</a></div>
 </nav>
 </div></header>
 <main id="main" tabindex="-1">${page.body}</main>
 <footer class="site-footer"><div class="wrap">
 <div class="footer-grid">
-<div class="footer-intro"><a class="brand footer-brand" href="/"><img src="/assets/mimark.png" width="1008" height="737" alt="" loading="lazy"><span class="brand-name">Makhuzwayo <span>Investors</span></span></a><p>Helping South African innovators explore ways to develop ideas that meet practical needs.</p><p>${contactLinks()}</p></div>
-${footerGroup('Explore', [['/about/', 'About Us'], ['/how-it-works/', 'How It Works'], ['/innovation-categories/', 'Innovation Categories'], ['/innovation-categories/renewable-energy/', 'Renewable Energy'], ['/innovation-categories/technology-software/', 'Technology & Software'], ['/contact/', 'Contact']])}
-${footerGroup('Get involved', [['/for-innovators/', 'For Innovators'], ['/submit-your-idea/', 'Submit Your Idea'], ['/for-investors/', 'For Investors'], ['/investor-enquiry/', 'Investor Enquiry'], ['/faqs/', 'FAQs']])}
+<div class="footer-intro"><a class="brand footer-brand" href="/"><img src="/assets/mimark-footer.webp" width="144" height="105" alt="" loading="lazy"><span class="brand-name">Makhuzwayo <span>Investors</span></span></a><p>Helping South African innovators explore ways to develop ideas that meet practical needs.</p><p>${contactLinks()}</p></div>
+${footerGroup('Explore', [['/about/', 'About Us'], ['/how-it-works/', 'How It Works'], ['/innovation-categories/', 'Browse All Categories'], ['/contact/', 'Contact']])}
+${footerGroup('Get involved', [['/for-innovators/', 'For Innovators'], [ideaPreviewUrl, ideaPreviewLabel], ['/for-investors/', 'For Investors'], ['/investor-enquiry/', investorPreviewLabel], ['/faqs/', 'FAQs']])}
 ${footerGroup('Policies and guidance', [['/privacy/', 'Privacy Policy'], ['/terms/', 'Terms of Use'], ['/idea-submission-terms/', 'Idea Submission Terms'], ['/intellectual-property/', 'Intellectual Property'], ['/privacy/#cookies', 'Cookie Information']])}
 </div>
 <div class="footer-bottom"><small>© ${new Date().getFullYear()} Makhuzwayo Investors</small><small class="developer-credit">Powered By: <a href="${escape(credit.url)}" target="_blank" rel="noopener noreferrer">${escape(credit.name)}</a></small></div>
